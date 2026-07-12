@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>T-MINUS</title>
+<meta name="theme-color" content="#03130c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2303130c'/%3E%3Ctext x='32' y='44' font-family='monospace' font-size='34' font-weight='bold' fill='%2334d399' text-anchor='middle'%3ET–%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:#030605;color:#fff;overflow:hidden;
+  font-family:'Space Grotesk',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  --acc:#34d399;
+}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+body[data-state=idle]{--acc:#34d399}
+body[data-state=running]{--acc:#34d399}
+body[data-state=warning]{--acc:#fbbf24}
+body[data-state=critical]{--acc:#f87171}
+body[data-state=buffer]{--acc:#22d3ee}
+body[data-state=waiting]{--acc:#a78bfa}
+body[data-state=done]{--acc:#fbbf24}
+body[data-state=paused]{--acc:#94a3b8}
+
+/* ---------- BACKGROUNDS ---------- */
+.bgs{position:fixed;inset:0;z-index:0}
+.bg{position:absolute;inset:0;opacity:0;transition:opacity 1.8s ease}
+.bg-idle{background:
+  radial-gradient(90rem 60rem at 50% 115%,#093323 0%,transparent 60%),
+  radial-gradient(70rem 50rem at 85% -10%,#06231a 0%,transparent 55%),
+  linear-gradient(175deg,#050908 0%,#02110c 100%)}
+.bg-running{background:
+  radial-gradient(95rem 65rem at 12% 18%,#0b5138 0%,transparent 62%),
+  radial-gradient(85rem 60rem at 88% 82%,#04684a 0%,transparent 60%),
+  radial-gradient(60rem 40rem at 75% 8%,rgba(52,211,153,.20) 0%,transparent 55%),
+  linear-gradient(160deg,#04140d 0%,#052e1f 55%,#03170f 100%)}
+.bg-warning{background:
+  radial-gradient(95rem 65rem at 15% 20%,#7c3f0c 0%,transparent 60%),
+  radial-gradient(85rem 60rem at 85% 80%,#92400e 0%,transparent 58%),
+  radial-gradient(60rem 40rem at 70% 6%,rgba(251,191,36,.18) 0%,transparent 55%),
+  linear-gradient(160deg,#170c02 0%,#3a1f06 55%,#1a0d03 100%)}
+.bg-critical{background:
+  radial-gradient(95rem 65rem at 14% 22%,#7f1d1d 0%,transparent 60%),
+  radial-gradient(85rem 60rem at 86% 80%,#991b1b 0%,transparent 58%),
+  radial-gradient(60rem 40rem at 72% 6%,rgba(248,113,113,.22) 0%,transparent 55%),
+  linear-gradient(160deg,#170305 0%,#3f0a0e 55%,#1c0406 100%)}
+.bg-buffer{background:
+  radial-gradient(95rem 65rem at 14% 20%,#0e7490 0%,transparent 60%),
+  radial-gradient(85rem 60rem at 86% 80%,#155e75 0%,transparent 58%),
+  radial-gradient(60rem 40rem at 72% 6%,rgba(34,211,238,.16) 0%,transparent 55%),
+  linear-gradient(160deg,#02141c 0%,#053345 55%,#02141c 100%)}
+.bg-waiting{background:
+  radial-gradient(95rem 65rem at 14% 20%,#4c1d95 0%,transparent 60%),
+  radial-gradient(85rem 60rem at 86% 80%,#3730a3 0%,transparent 58%),
+  radial-gradient(60rem 40rem at 72% 6%,rgba(129,140,248,.18) 0%,transparent 55%),
+  linear-gradient(160deg,#070515 0%,#150b33 55%,#070515 100%)}
+.bg-done{background:
+  radial-gradient(95rem 65rem at 14% 20%,#92610e 0%,transparent 60%),
+  radial-gradient(85rem 60rem at 86% 80%,#065f46 0%,transparent 58%),
+  radial-gradient(60rem 40rem at 72% 6%,rgba(251,191,36,.22) 0%,transparent 55%),
+  linear-gradient(160deg,#0b0d04 0%,#1f1606 55%,#071108 100%)}
+.bg-paused{background:
+  radial-gradient(95rem 65rem at 14% 20%,#334155 0%,transparent 60%),
+  radial-gradient(85rem 60rem at 86% 80%,#1e293b 0%,transparent 58%),
+  radial-gradient(60rem 40rem at 72% 6%,rgba(148,163,184,.15) 0%,transparent 55%),
+  linear-gradient(160deg,#0b0f14 0%,#1c2433 55%,#0b0f14 100%)}
+body[data-state=idle] .bg-idle{opacity:1}
+body[data-state=running] .bg-running{opacity:1}
+body[data-state=warning] .bg-warning{opacity:1}
+body[data-state=critical] .bg-critical{opacity:1;animation:critpulse 1.6s ease-in-out infinite alternate}
+body[data-state=buffer] .bg-buffer{opacity:1}
+body[data-state=waiting] .bg-waiting{opacity:1}
+body[data-state=done] .bg-done{opacity:1}
+body[data-state=paused] .bg-paused{opacity:1}
+@keyframes critpulse{from{filter:brightness(1)}to{filter:brightness(1.4)}}
+
+.orb{position:fixed;width:58vmax;height:58vmax;border-radius:50%;z-index:1;pointer-events:none;
+  background:radial-gradient(closest-side,color-mix(in oklab,var(--acc) 26%,transparent),transparent 72%);
+  filter:blur(50px);mix-blend-mode:screen;transition:background 1.8s ease}
+.o1{top:-18%;left:-12%;animation:float1 26s ease-in-out infinite alternate}
+.o2{bottom:-22%;right:-14%;animation:float2 34s ease-in-out infinite alternate}
+@keyframes float1{from{transform:translate(0,0) scale(1)}to{transform:translate(9vw,7vh) scale(1.18)}}
+@keyframes float2{from{transform:translate(0,0) scale(1.12)}to{transform:translate(-8vw,-6vh) scale(.95)}}
+body[data-state=critical] .o1{animation-duration:7s}
+body[data-state=critical] .o2{animation-duration:9s}
+
+.noise{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.vignette{position:fixed;inset:0;z-index:3;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 52%,rgba(0,0,0,.55) 100%)}
+
+/* ---------- HEADER ---------- */
+header{position:fixed;top:0;left:0;right:0;z-index:10;display:grid;grid-template-columns:1fr auto 1fr;
+  align-items:start;padding:2.1rem 2.6rem;gap:1rem}
+header label{display:block;font-size:.68rem;letter-spacing:.34em;opacity:.5;font-weight:500;margin-bottom:.35rem}
+#wall{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:clamp(1.7rem,3.6vw,3.6rem);
+  letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;
+  text-shadow:0 0 30px color-mix(in oklab,var(--acc) 30%,transparent)}
+#wall span{font-size:.34em;opacity:.5;margin-left:.45em;letter-spacing:.1em}
+#nextblock{text-align:center;min-width:0}
+#nextname{font-size:clamp(1.05rem,2.1vw,1.9rem);font-weight:500;text-transform:uppercase;letter-spacing:.02em;
+  max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:color-mix(in oklab,var(--acc) 40%,#fff)}
+#nextmeta{font-family:'JetBrains Mono',monospace;font-size:.78rem;opacity:.55;margin-top:.3rem;letter-spacing:.14em}
+#endblock{text-align:right}
+#endclock{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:clamp(1.2rem,2.4vw,2.3rem);letter-spacing:-.02em;line-height:1}
+#drift{font-family:'JetBrains Mono',monospace;font-size:.8rem;letter-spacing:.16em;margin-top:.35rem;font-weight:700}
+.good{color:#34d399}.bad{color:#f87171}
+body[data-state=idle] #nextblock,body[data-state=idle] #endblock{visibility:hidden}
+
+/* ---------- MAIN ---------- */
+main{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:11vh 3vw 12vh;pointer-events:none}
+#mainname{font-weight:700;font-size:clamp(2.1rem,7vw,8.5rem);line-height:.98;letter-spacing:-.02em;
+  text-transform:uppercase;max-width:94vw;text-wrap:balance;
+  background:linear-gradient(180deg,#fff 25%,color-mix(in oklab,var(--acc) 60%,#fff) 95%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 26px color-mix(in oklab,var(--acc) 40%,transparent))}
+#timer{font-family:'JetBrains Mono',monospace;font-weight:800;font-size:clamp(4.5rem,19vw,21rem);
+  line-height:.92;letter-spacing:-.05em;font-variant-numeric:tabular-nums;margin-top:1vh;
+  text-shadow:0 0 60px color-mix(in oklab,var(--acc) 45%,transparent),0 0 160px color-mix(in oklab,var(--acc) 28%,transparent)}
+body[data-state=critical] #timer{animation:beat 1s ease-in-out infinite}
+@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.015)}}
+body[data-state=paused] #timer{animation:pblink 2.6s ease-in-out infinite}
+@keyframes pblink{0%,100%{opacity:1}50%{opacity:.45}}
+body[data-state=buffer] #mainname{animation:breathe 5s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:.9}50%{opacity:.55}}
+#subline{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:clamp(.85rem,1.5vw,1.3rem);
+  letter-spacing:.2em;text-transform:uppercase;opacity:.55;margin-top:2.2vh}
+
+/* previous task, bleeding off the bottom = the past */
+#prev{position:fixed;bottom:0;left:50%;transform:translate(-50%,44%);z-index:4;pointer-events:none;
+  font-weight:700;font-size:clamp(2rem,6.5vw,7rem);letter-spacing:-.02em;text-transform:uppercase;
+  white-space:nowrap;opacity:.15;
+  -webkit-mask-image:linear-gradient(to bottom,#000 5%,transparent 72%);
+  mask-image:linear-gradient(to bottom,#000 5%,transparent 72%)}
+
+/* ---------- CONTROLS ---------- */
+#controls{position:fixed;bottom:3.4rem;left:50%;transform:translateX(-50%);z-index:20;display:flex;gap:.7rem;
+  opacity:.22;transition:opacity .3s;padding:1rem}
+#controls:hover{opacity:1}
+body[data-state=idle] #controls,body[data-state=done] #controls{opacity:1}
+button{font-family:inherit;cursor:pointer}
+.ctl{background:rgba(0,0,0,.25);border:1px solid color-mix(in oklab,var(--acc) 45%,rgba(255,255,255,.15));
+  color:#fff;font-size:.78rem;font-weight:500;letter-spacing:.24em;padding:.85rem 1.5rem;border-radius:99px;
+  transition:background .2s,border-color .2s}
+.ctl:hover{background:color-mix(in oklab,var(--acc) 22%,transparent)}
+#btnEnd.arm{border-color:#f87171;color:#f87171}
+#btnNew{background:linear-gradient(90deg,#059669,#10b981 60%,#34d399);color:#03130c;font-weight:700;border:0;
+  box-shadow:0 0 40px rgba(16,185,129,.4)}
+#btnSetup{position:fixed;right:1.6rem;bottom:3.4rem;z-index:20;opacity:.35;transition:opacity .3s}
+#btnSetup:hover{opacity:1}
+
+/* ---------- TIMELINE ---------- */
+#timeline{position:fixed;left:0;right:0;bottom:0;height:8px;z-index:15;display:flex;gap:3px;padding:0 3px 3px}
+.tlb{position:relative;border-radius:2px;overflow:hidden;min-width:3px}
+.tlb.task{background:rgba(52,211,153,.16)}
+.tlb.buffer{background:rgba(34,211,238,.14)}
+.tlb.wait{background:rgba(167,139,250,.14)}
+.tlb i{display:block;height:100%;width:0}
+.tlb.task i{background:#34d399;box-shadow:0 0 12px #34d399}
+.tlb.buffer i{background:#22d3ee;box-shadow:0 0 12px #22d3ee}
+.tlb.wait i{background:#a78bfa;box-shadow:0 0 12px #a78bfa}
+
+#toast{position:fixed;top:7.5rem;left:50%;transform:translateX(-50%);z-index:40;
+  font-family:'JetBrains Mono',monospace;font-size:.75rem;letter-spacing:.22em;color:#fbbf24;
+  border:1px solid rgba(251,191,36,.5);border-radius:99px;padding:.6rem 1.2rem;background:rgba(20,12,0,.85)}
+#dormant{position:fixed;top:7.5rem;left:50%;transform:translateX(-50%);z-index:45;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;font-size:.75rem;letter-spacing:.22em;color:#94a3b8;
+  border:1px solid rgba(148,163,184,.5);border-radius:99px;padding:.6rem 1.2rem;background:rgba(10,14,20,.92)}
+[hidden]{display:none!important}
+
+/* ---------- PANEL ---------- */
+#panel{position:fixed;inset:0;z-index:50;background:rgba(4,9,7,.97);overflow-y:auto;
+  opacity:0;pointer-events:none;transition:opacity .25s;padding:5vh 5vw 8vh}
+body.popen #panel{opacity:1;pointer-events:auto}
+.pwrap{max-width:1080px;margin:0 auto}
+.ptitle{font-weight:700;font-size:clamp(2rem,4vw,3.2rem);letter-spacing:-.03em;
+  background:linear-gradient(90deg,#fff,#34d399 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ptag{font-family:'JetBrains Mono',monospace;font-size:.72rem;letter-spacing:.34em;opacity:.5;margin:.4rem 0 3rem}
+.pgrid{display:grid;grid-template-columns:1.45fr 1fr;gap:3.5rem}
+@media(max-width:900px){.pgrid{grid-template-columns:1fr}}
+#panel h2{font-size:.72rem;letter-spacing:.34em;font-weight:500;opacity:.55;border-bottom:1px solid rgba(255,255,255,.09);
+  padding-bottom:.7rem;margin-bottom:1.1rem}
+.thead{display:grid;grid-template-columns:1.5rem 1fr 4.6rem 4.6rem 1.8rem;gap:.55rem;
+  font-size:.62rem;letter-spacing:.24em;opacity:.4;margin-bottom:.4rem;padding:0 .2rem}
+.thead :nth-child(3),.thead :nth-child(4){text-align:center}
+.trow{display:grid;grid-template-columns:1.5rem 1fr 4.6rem 4.6rem 1.8rem;gap:.55rem;align-items:stretch;margin-bottom:.5rem}
+.ord{display:flex;flex-direction:column;justify-content:center;gap:2px}
+.ord button{background:none;border:0;color:#fff;opacity:.3;font-size:.55rem;line-height:1;padding:2px}
+.ord button:hover{opacity:1}
+#panel input,#panel select{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:#fff;
+  font-family:inherit;font-size:.95rem;padding:.68rem .8rem;border-radius:7px;outline:none;width:100%}
+#panel input:focus,#panel select:focus{border-color:var(--acc)}
+.tmin,.tbuf{font-family:'JetBrains Mono',monospace!important;text-align:center}
+input[type=number]::-webkit-inner-spin-button{opacity:.3}
+.tdel{background:none;border:0;color:#fff;opacity:.3;font-size:1rem}
+.tdel:hover{opacity:1;color:#f87171}
+.paddrow{display:flex;gap:.8rem;margin-top:.8rem}
+#addTask{flex:1;background:none;border:1px dashed rgba(255,255,255,.25);color:#fff;opacity:.7;
+  padding:.8rem;border-radius:7px;letter-spacing:.2em;font-size:.78rem}
+#addTask:hover{opacity:1;border-color:var(--acc)}
+#clearTasks{background:none;border:0;color:#fff;opacity:.35;font-size:.72rem;letter-spacing:.2em}
+#clearTasks:hover{opacity:1;color:#f87171}
+#preview{font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.9;letter-spacing:.08em;
+  opacity:.85;margin-top:1.6rem;border-left:2px solid var(--acc);padding-left:1rem}
+#preview b{color:var(--acc)}
+#preview.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  padding:.85rem 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.srow>label{font-size:.72rem;letter-spacing:.2em;opacity:.7;white-space:nowrap}
+.srow .rt{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:flex-end}
+.srow input[type=number]{width:4.6rem}
+.srow input[type=time]{width:8rem;font-family:'JetBrains Mono',monospace}
+.seg{display:inline-flex;border:1px solid rgba(255,255,255,.14);border-radius:7px;overflow:hidden}
+.seg button{padding:.55rem .85rem;background:none;border:0;color:rgba(255,255,255,.55);
+  font-size:.68rem;letter-spacing:.14em;font-weight:500}
+.seg button.on{background:var(--acc);color:#04110b;font-weight:700}
+input[type=checkbox]{accent-color:#10b981;width:1.1rem;height:1.1rem}
+input[type=range]{accent-color:#10b981;width:8rem;padding:0;border:0!important;background:none!important}
+#rateVal{font-family:'JetBrains Mono',monospace;font-size:.78rem;opacity:.7;width:2.4rem;text-align:right}
+#testBtn{background:none;border:1px solid rgba(255,255,255,.2);color:#fff;padding:.5rem .9rem;border-radius:7px;
+  font-size:.68rem;letter-spacing:.2em}
+#testBtn:hover{border-color:var(--acc)}
+.pactions{display:flex;gap:1rem;margin-top:3rem}
+#btnStart{flex:1;background:linear-gradient(90deg,#059669,#10b981 55%,#34d399);color:#02110a;border:0;
+  font-weight:700;font-size:1.02rem;letter-spacing:.3em;padding:1.25rem;border-radius:9px;
+  box-shadow:0 0 46px rgba(16,185,129,.35);transition:filter .2s}
+#btnStart:hover{filter:brightness(1.12)}
+#btnEnd2{background:none;border:1px solid rgba(248,113,113,.4);color:#f87171;letter-spacing:.24em;
+  font-size:.8rem;padding:0 2rem;border-radius:9px}
+#btnEnd2:hover{background:rgba(248,113,113,.12)}
+#pclose{position:fixed;top:1.3rem;right:1.7rem;background:none;border:0;color:#fff;opacity:.45;
+  font-size:1.6rem;line-height:1;padding:.5rem;z-index:60}
+#pclose:hover{opacity:1}
+.pnote{font-size:.7rem;letter-spacing:.14em;opacity:.35;margin-top:1rem;text-align:center}
+#panel ::-webkit-scrollbar{width:8px}
+</style>
+</head>
+<body data-state="idle">
+
+<div class="bgs">
+  <div class="bg bg-idle"></div><div class="bg bg-running"></div><div class="bg bg-warning"></div>
+  <div class="bg bg-critical"></div><div class="bg bg-buffer"></div><div class="bg bg-waiting"></div>
+  <div class="bg bg-done"></div><div class="bg bg-paused"></div>
+</div>
+<div class="orb o1"></div><div class="orb o2"></div>
+<div class="noise"></div><div class="vignette"></div>
+
+<header>
+  <div><label>NOW</label><div id="wall" class="mono">--:--:--</div></div>
+  <div id="nextblock"><label id="nextlabel">UP NEXT</label><div id="nextname">—</div><div id="nextmeta"></div></div>
+  <div id="endblock"><label id="endlabel">T-ZERO</label><div id="endclock" class="mono">--:--</div><div id="drift"></div></div>
+</header>
+
+<main>
+  <div id="mainname">T-MINUS</div>
+  <div id="timer" class="mono">00:00</div>
+  <div id="subline">CONFIGURE YOUR MISSION</div>
+</main>
+
+<div id="prev"></div>
+
+<div id="controls">
+  <button class="ctl" id="btnDone" hidden>COMPLETE ▸</button>
+  <button class="ctl" id="btnDefer" hidden>DEFER ▸▸</button>
+  <button class="ctl" id="btnPlus" hidden>+5 MIN</button>
+  <button class="ctl" id="btnPause" hidden>⏸ PAUSE</button>
+  <button class="ctl" id="btnEnd" hidden>✕ END</button>
+  <button class="ctl" id="btnNew" hidden>NEW SESSION</button>
+</div>
+<button class="ctl" id="btnSetup">SETUP</button>
+<div id="timeline"></div>
+<div id="toast" hidden>🔊 CLICK ANYWHERE TO ARM AUDIO</div>
+<div id="dormant" hidden>🔇 MUTED — ACTIVE IN ANOTHER TAB · CLICK TO TAKE OVER</div>
+
+<div id="panel"><button id="pclose" title="close">✕</button><div class="pwrap">
+  <div class="ptitle">T-MINUS</div>
+  <div class="ptag">TIME, MADE LOUD · FOR BRAINS THAT CAN'T FEEL IT</div>
+  <div class="pgrid">
+    <section>
+      <h2>MISSION QUEUE</h2>
+      <div class="thead"><span></span><span>TASK</span><span>MIN</span><span>BUF</span><span></span></div>
+      <div id="tasklist"></div>
+      <div class="paddrow"><button id="addTask">+ ADD TASK</button><button id="clearTasks">CLEAR</button></div>
+      <div id="preview"></div>
+    </section>
+    <section>
+      <h2>PARAMETERS</h2>
+      <div class="srow"><label>MODE</label><div class="rt">
+        <div class="seg"><button id="modeF">START NOW</button><button id="modeD">BY DEADLINE</button></div>
+        <input type="time" id="dlInput" style="display:none">
+      </div></div>
+      <div class="srow"><label>DEFAULT BUFFER</label><div class="rt"><input type="number" id="defBuf" min="0"><span style="opacity:.4;font-size:.7rem">MIN</span></div></div>
+      <div class="srow"><label>WARN AT</label><div class="rt">
+        <input type="number" id="warnVal" min="1">
+        <div class="seg"><button id="warnPct">%</button><button id="warnMin">MIN</button></div>
+      </div></div>
+      <div class="srow"><label>FINAL STRETCH AT</label><div class="rt">
+        <input type="number" id="critVal" min="1">
+        <div class="seg"><button id="critPct">%</button><button id="critMin">MIN</button></div>
+      </div></div>
+      <div class="srow"><label>ANNOUNCE TIME EVERY :00 / :30</label><div class="rt"><input type="checkbox" id="halfHourChk"></div></div>
+      <div class="srow"><label>CHIME BEFORE SPEECH</label><div class="rt"><input type="checkbox" id="chimeChk"></div></div>
+      <div class="srow"><label>VOICE</label><div class="rt"><select id="voiceSel" style="max-width:13rem"></select></div></div>
+      <div class="srow"><label>SPEECH RATE</label><div class="rt"><input type="range" id="rateRange" min="0.7" max="1.4" step="0.05"><span id="rateVal">1.0</span></div></div>
+      <div class="srow"><label>AUDIO CHECK</label><div class="rt"><button id="testBtn">▶ TEST VOICE</button></div></div>
+    </section>
+  </div>
+  <div class="pactions"><button id="btnStart">LAUNCH</button><button id="btnEnd2" hidden>END SESSION</button></div>
+  <div class="pnote">ESC / ✕ / CLICK OUTSIDE TO CLOSE · N = COMPLETE · D = DEFER · P = PAUSE · + = 5 MIN · EDITS APPLY LIVE · EVERYTHING SURVIVES REFRESH</div>
+</div></div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const M=60000, LSKEY='tminus.v1';
+const DEFS={mode:'forward',deadline:'23:00',defBuf:5,warnVal:25,warnUnit:'pct',critVal:5,critUnit:'pct',halfHour:true,chime:true,voice:'__say__',rate:1};
+let S=(()=>{try{const j=JSON.parse(localStorage.getItem(LSKEY));if(j&&j.settings){j.settings={...DEFS,...j.settings};
+  if(!j.v2){j.v2=1;j.settings.voice='__say__'}
+  if(j.session&&!j.session.doneIds)j.session.doneIds={};
+  return j}}catch(e){}
+  return {seq:1,v2:1,tasks:[
+    {id:'t1',name:'Clear the runway',min:10,buf:''},
+    {id:'t2',name:'Deep work block',min:45,buf:''},
+    {id:'t3',name:'Email + message sweep',min:15,buf:''}
+  ],settings:{...DEFS},session:null}})();
+const save=()=>{if(dormant)return;try{localStorage.setItem(LSKEY,JSON.stringify(S))}catch(e){}};
+const uid=()=>'g'+(S.seq=(S.seq||1)+1)+Math.random().toString(36).slice(2,5);
+const pad=n=>String(n).padStart(2,'0');
+const clock=ts=>new Date(ts).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+function fmt(ms){const s=Math.max(0,Math.ceil(ms/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;
+  return h?h+':'+pad(m)+':'+pad(sec):pad(m)+':'+pad(sec)}
+function hum(ms){const s=Math.round(ms/1000);if(s<95)return s+' seconds';const m=Math.round(ms/M);
+  if(m<60)return m+(m===1?' minute':' minutes');const h=Math.floor(m/60),r=m%60;
+  return h+(h===1?' hour':' hours')+(r?' and '+r+(r===1?' minute':' minutes'):'')}
+function humShort(ms){const m=Math.round(ms/M),h=Math.floor(m/60),r=m%60;return h?(r?h+'H '+r+'M':h+'H'):r+'M'}
+const thr=(v,u,tot)=>u==='pct'?tot*((+v)||0)/100:((+v)||0)*M;
+
+/* ---------- MULTI-TAB SINGLETON: only one tab speaks ---------- */
+const TABID=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+let dormant=false,claimTs=0;
+const bc=('BroadcastChannel' in window)?new BroadcastChannel('tminus'):null;
+function claim(){claimTs=Date.now();dormant=false;el.dormant.hidden=true;
+  bc&&bc.postMessage({type:'claim',id:TABID,ts:claimTs})}
+function goDormant(){if(dormant)return;dormant=true;el.dormant.hidden=false;el.toast.hidden=true;
+  try{speechSynthesis.cancel()}catch(e){}}
+if(bc)bc.onmessage=e=>{const m=e.data||{};if(m.type!=='claim'||m.id===TABID)return;
+  if(m.ts>claimTs||(m.ts===claimTs&&m.id>TABID))goDormant();
+  else bc.postMessage({type:'claim',id:TABID,ts:claimTs})};
+addEventListener('storage',e=>{if(e.key!==LSKEY||!dormant)return;
+  try{const j=JSON.parse(e.newValue);if(j&&j.settings){S=j;
+    buildTimeline();renderTasks();syncSettings();renderPreview();tick()}}catch(err){}});
+function takeover(){if(!dormant)return;
+  try{const j=JSON.parse(localStorage.getItem(LSKEY));if(j&&j.settings)S=j}catch(e){}
+  claim();buildTimeline();renderTasks();syncSettings();renderPreview();tick()}
+
+/* ---------- AUDIO ---------- */
+let AC=null;const uq=[];
+function chime(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+  if(AC.state==='suspended')AC.resume();const t0=AC.currentTime;
+  [[880,0],[1318.5,.16]].forEach(([f,dt])=>{const o=AC.createOscillator(),g=AC.createGain();
+    o.type='sine';o.frequency.value=f;o.connect(g);g.connect(AC.destination);const st=t0+dt;
+    g.gain.setValueAtTime(0,st);g.gain.linearRampToValueAtTime(.22,st+.02);
+    g.gain.exponentialRampToValueAtTime(.0001,st+.3);o.start(st);o.stop(st+.32)})}catch(e){}}
+let sayBackend=false;
+fetch('/ping').then(r=>r.json()).then(j=>{sayBackend=!!(j&&j.say);loadVoices()}).catch(()=>{});
+function say(txt){if(dormant)return;
+  if(S.settings.chime)chime();
+  const delay=S.settings.chime?430:0;
+  if(sayBackend&&S.settings.voice==='__say__'){
+    const r=+S.settings.rate||1;
+    const qs='text='+encodeURIComponent(txt)+(Math.abs(r-1)>.01?'&rate='+Math.round(175*r):'');
+    setTimeout(()=>{fetch('/say?'+qs).catch(()=>{})},delay);return}
+  if(!('speechSynthesis' in window))return;
+  const u=new SpeechSynthesisUtterance(txt);
+  try{const vs=speechSynthesis.getVoices();const v=vs.find(v=>v.voiceURI===S.settings.voice);if(v)u.voice=v}catch(e){}
+  u.rate=+S.settings.rate||1;u.volume=1;
+  uq.push(u);if(uq.length>25)uq.shift();
+  setTimeout(()=>{try{speechSynthesis.speak(u)}catch(e){}},delay)}
+
+/* ---------- SCHEDULE ---------- */
+function buildList(){return S.tasks
+  .filter(t=>String(t.name||'').trim()&&(+t.min)>0)
+  .map(t=>({id:t.id,name:String(t.name).trim(),min:+t.min,
+    bufAfter:(t.buf===''||t.buf==null||isNaN(+t.buf))?Math.max(0,+S.settings.defBuf||0):Math.max(0,+t.buf)}))}
+function totalOf(list){return list.reduce((a,t,i)=>a+t.min*M+(i<list.length-1?t.bufAfter*M:0),0)}
+function futureList(excludeId){const done=(S.session&&S.session.doneIds)||{};
+  return buildList().filter(t=>!done[t.id]&&t.id!==excludeId)}
+function parseDeadline(){const p=String(S.settings.deadline||'23:00').split(':');
+  const d=new Date();d.setHours(+p[0]||0,+p[1]||0,0,0);
+  if(d.getTime()<=Date.now()+30000)d.setDate(d.getDate()+1);return d.getTime()}
+function makeSegs(list,anchor){const segs=[];let c=anchor;
+  list.forEach((t,i)=>{
+    const prevDirect=i>0&&list[i-1].bufAfter<=0?list[i-1].name:null;
+    segs.push({id:uid(),kind:'task',taskId:t.id,builtMin:t.min,name:t.name,start:c,end:c+t.min*M,bufAfter:t.bufAfter,prevDirect});
+    c+=t.min*M;
+    if(i<list.length-1&&t.bufAfter>0){
+      segs.push({id:uid(),kind:'buffer',name:'BUFFER',start:c,end:c+t.bufAfter*M,prev:t.name,next:list[i+1].name});
+      c+=t.bufAfter*M}});
+  return segs}
+function startSession(){const list=buildList();
+  if(!list.length){el.preview.classList.remove('shake');void el.preview.offsetWidth;el.preview.classList.add('shake');renderPreview();return}
+  const total=totalOf(list),now=Date.now();
+  let deadline=null,anchor=now;
+  if(S.settings.mode==='deadline'){deadline=parseDeadline();anchor=deadline-total}
+  const segs=[];
+  if(anchor>now+1500)segs.push({id:uid(),kind:'wait',name:'T-MINUS',start:now,end:anchor,next:list[0].name});
+  segs.push(...makeSegs(list,anchor));
+  S.session={segments:segs,deadline,startedAt:now,fired:{},doneIds:{},pausedAt:null};
+  save();buildTimeline();closePanel();reqWake();tick()}
+function currentSeg(now){const segs=S.session.segments;
+  return segs.find(s=>now>=s.start&&now<s.end)||(now<segs[0].start?segs[0]:null)}
+function advance(){const ses=S.session;if(!ses||ses.pausedAt)return;const now=Date.now();
+  const segs=ses.segments;const seg=currentSeg(now);if(!seg)return;
+  const past=segs.slice(0,segs.indexOf(seg));
+  if(seg.kind==='task'&&seg.taskId)ses.doneIds[seg.taskId]=1;
+  const fl=futureList(null);let mid=[],c=now;
+  if(seg.kind==='task'&&fl.length&&(seg.bufAfter||0)>0){
+    mid.push({id:uid(),kind:'buffer',name:'BUFFER',start:now,end:now+seg.bufAfter*M,prev:seg.name,next:fl[0].name});
+    c=now+seg.bufAfter*M}
+  const rebuilt=fl.length?makeSegs(fl,c):[];
+  if(seg.kind==='task'&&!mid.length&&rebuilt.length)rebuilt[0].prevDirect=seg.name;
+  ses.segments=[...past,{...seg,end:now},...mid,...rebuilt];
+  save();buildTimeline();tick()}
+function defer(){const ses=S.session;if(!ses||ses.pausedAt)return;const now=Date.now();
+  const segs=ses.segments;const seg=currentSeg(now);if(!seg||seg.kind!=='task')return;
+  if(!futureList(seg.taskId).length)return;
+  const t=S.tasks.find(x=>x.id===seg.taskId);
+  if(t){t.min=Math.max(1,Math.ceil((seg.end-now)/M));
+    S.tasks.splice(S.tasks.indexOf(t),1);S.tasks.push(t)}
+  const past=segs.slice(0,segs.indexOf(seg));
+  ses.segments=[...past,{...seg,end:now},...makeSegs(futureList(null),now)];
+  say(seg.name+' — deferred to the end of the queue.');
+  save();renderTasks();renderPreview();buildTimeline();tick()}
+function togglePause(){const ses=S.session;if(!ses)return;const now=Date.now();
+  if(!currentSeg(ses.pausedAt||now))return;
+  if(ses.pausedAt){const d=now-ses.pausedAt;
+    ses.segments.forEach(s=>{if(s.end>ses.pausedAt){s.start+=d;s.end+=d}});
+    ses.pausedAt=null;
+    const seg=currentSeg(now);
+    say(seg&&seg.kind==='task'?('Resuming. '+hum(seg.end-now)+' left on '+seg.name+'.'):'Resuming.');
+  }else{ses.pausedAt=now;say('Paused.')}
+  save();buildTimeline();tick()}
+function liveSync(){const ses=S.session;if(!ses)return;
+  const vnow=ses.pausedAt||Date.now();
+  const segs=ses.segments;if(vnow>=segs[segs.length-1].end)return;
+  const seg=currentSeg(vnow);if(!seg)return;
+  const past=segs.slice(0,segs.indexOf(seg));const cur={...seg};
+  let out;
+  if(cur.kind==='task'){
+    const t=S.tasks.find(x=>x.id===cur.taskId);
+    if(t&&String(t.name||'').trim()&&(+t.min)>0){
+      cur.name=String(t.name).trim();
+      const bm=+t.min;
+      if(bm!==cur.builtMin){cur.builtMin=bm;cur.end=Math.max(vnow+5000,cur.start+bm*M)}
+      cur.bufAfter=(t.buf===''||t.buf==null||isNaN(+t.buf))?Math.max(0,+S.settings.defBuf||0):Math.max(0,+t.buf);
+    }else if(!t){cur.end=vnow}
+    const fl=futureList(cur.taskId);let mid=[],c=cur.end;
+    if(fl.length&&(cur.bufAfter||0)>0&&cur.end>vnow){
+      mid=[{id:uid(),kind:'buffer',name:'BUFFER',start:cur.end,end:cur.end+cur.bufAfter*M,prev:cur.name,next:fl[0].name}];
+      c=cur.end+cur.bufAfter*M}
+    const reb=makeSegs(fl,c);
+    if(!mid.length&&reb.length)reb[0].prevDirect=cur.name;
+    out=[...past,cur,...mid,...reb];
+  }else if(cur.kind==='buffer'){
+    const fl=futureList(null);cur.next=fl.length?fl[0].name:cur.next;
+    out=[...past,cur,...makeSegs(fl,cur.end)];
+  }else{
+    const fl=futureList(null);
+    if(!fl.length)out=[...past,{...cur,end:vnow}];
+    else{if(ses.deadline)cur.end=Math.max(vnow,ses.deadline-totalOf(fl));
+      cur.next=fl[0].name;
+      out=[...past,cur,...makeSegs(fl,cur.end)]}
+  }
+  ses.segments=out;save();buildTimeline();tick()}
+function extend(){const ses=S.session;if(!ses||ses.pausedAt)return;const now=Date.now();
+  const segs=ses.segments;const seg=currentSeg(now);if(!seg)return;
+  const idx=segs.indexOf(seg),d=5*M;
+  seg.end+=d;for(let i=idx+1;i<segs.length;i++){segs[i].start+=d;segs[i].end+=d}
+  delete ses.fired['w_'+seg.id];delete ses.fired['c_'+seg.id];
+  say('Five minutes added.');
+  save();buildTimeline();tick()}
+function endSession(){S.session=null;save();relWake();buildTimeline();openPanel();tick()}
+
+/* ---------- ANNOUNCEMENTS ---------- */
+function fire(ses,seg,now,rem,wMs,cMs,paused){const F=ses.fired;let dirty=false;
+  if(!paused){
+  const sk='st_'+seg.id;
+  if(!F[sk]){F[sk]=1;dirty=true;
+    if(seg.kind==='task'){
+      say((seg.prevDirect?seg.prevDirect+' — done. ':'')+'Now starting: '+seg.name+'. '+hum(rem)+' on the clock.');
+      if(rem<=wMs)F['w_'+seg.id]=1;
+      if(rem<=cMs)F['c_'+seg.id]=1;
+    }else if(seg.kind==='buffer'){
+      say(seg.prev+' — done. '+hum(rem)+' buffer. Then: '+seg.next+'.');
+    }else{
+      say('T minus '+hum(rem)+' until '+(seg.next||'the first task')+'.'+(ses.deadline?' Deadline at '+clock(ses.deadline)+'.':''));
+    }}
+  if(seg.kind==='task'){
+    if(rem<=cMs&&!F['c_'+seg.id]){F['c_'+seg.id]=1;dirty=true;
+      say('Final stretch. '+hum(rem)+' left on '+seg.name+'.')}
+    else if(rem<=wMs&&!F['w_'+seg.id]){F['w_'+seg.id]=1;dirty=true;
+      say('Heads up. '+hum(rem)+' remaining for '+seg.name+'.')}}
+  }
+  if(S.settings.halfHour){const d=new Date(now);
+    if(d.getMinutes()%30===0&&d.getSeconds()<10){
+      const key='h_'+d.getDate()+'_'+d.getHours()+'_'+d.getMinutes();
+      if(!F[key]){F[key]=1;dirty=true;say('It is '+clock(now)+'.')}}}
+  if(dirty)save()}
+
+/* ---------- WAKE LOCK ---------- */
+let wl=null;
+async function reqWake(){try{wl=await navigator.wakeLock.request('screen')}catch(e){}}
+function relWake(){try{wl&&wl.release();wl=null}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.session)reqWake()});
+
+/* ---------- DOM ---------- */
+const el={wall:$('#wall'),mainname:$('#mainname'),timer:$('#timer'),subline:$('#subline'),prev:$('#prev'),
+  next:$('#nextblock'),nextlabel:$('#nextlabel'),nextname:$('#nextname'),nextmeta:$('#nextmeta'),
+  endb:$('#endblock'),endlabel:$('#endlabel'),endclock:$('#endclock'),drift:$('#drift'),
+  btnDone:$('#btnDone'),btnDefer:$('#btnDefer'),btnPlus:$('#btnPlus'),btnPause:$('#btnPause'),
+  btnEnd:$('#btnEnd'),btnNew:$('#btnNew'),btnSetup:$('#btnSetup'),pclose:$('#pclose'),
+  tl:$('#timeline'),toast:$('#toast'),dormant:$('#dormant'),panel:$('#panel'),tasklist:$('#tasklist'),preview:$('#preview'),
+  addTask:$('#addTask'),clearTasks:$('#clearTasks'),modeF:$('#modeF'),modeD:$('#modeD'),dlInput:$('#dlInput'),
+  defBuf:$('#defBuf'),warnVal:$('#warnVal'),warnPct:$('#warnPct'),warnMin:$('#warnMin'),
+  critVal:$('#critVal'),critPct:$('#critPct'),critMin:$('#critMin'),
+  halfHourChk:$('#halfHourChk'),chimeChk:$('#chimeChk'),voiceSel:$('#voiceSel'),
+  rateRange:$('#rateRange'),rateVal:$('#rateVal'),testBtn:$('#testBtn'),
+  btnStart:$('#btnStart'),btnEnd2:$('#btnEnd2')};
+let panelOpen=false,tickN=0,endArm=0;
+function openPanel(){panelOpen=true;document.body.classList.add('popen');el.btnStart.textContent=S.session?'RELAUNCH':'LAUNCH';
+  el.btnEnd2.hidden=!S.session;renderPreview()}
+function closePanel(){panelOpen=false;document.body.classList.remove('popen')}
+function togglePanel(){panelOpen?closePanel():openPanel()}
+
+function setCtl(mode,paused,hasNext){
+  const running=mode==='task'||mode==='buffer'||mode==='wait';
+  el.btnDone.hidden=!running||!!paused;
+  el.btnDefer.hidden=mode!=='task'||!!paused||!hasNext;
+  el.btnPlus.hidden=!running||!!paused;
+  el.btnPause.hidden=!running;
+  el.btnEnd.hidden=!running;
+  el.btnNew.hidden=mode!=='done';
+  el.btnPause.textContent=paused?'▶ RESUME':'⏸ PAUSE';
+  if(running)el.btnDone.textContent=mode==='task'?'COMPLETE ▸':mode==='buffer'?'SKIP BUFFER ▸':'START NOW ▸'}
+
+function renderEnd(ses,last,shift){el.endb.style.visibility='visible';const le=last.end+(shift||0);
+  if(ses.deadline){el.endlabel.textContent='DEADLINE';el.endclock.textContent=clock(ses.deadline);
+    const diff=le-ses.deadline;
+    if(Math.abs(diff)<M){el.drift.textContent='ON TIME';el.drift.className='good'}
+    else if(diff>0){el.drift.textContent=humShort(diff)+' OVER';el.drift.className='bad'}
+    else{el.drift.textContent=humShort(-diff)+' SPARE';el.drift.className='good'}}
+  else{el.endlabel.textContent='T-ZERO';el.endclock.textContent=clock(le);el.drift.textContent=''}}
+
+/* ---------- TIMELINE ---------- */
+function buildTimeline(){el.tl.innerHTML='';const ses=S.session;if(!ses)return;
+  ses.segments.forEach(s=>{const b=document.createElement('div');b.className='tlb '+s.kind;
+    b.style.flexGrow=Math.max(1,(s.end-s.start)/1000);
+    b.appendChild(document.createElement('i'));el.tl.appendChild(b)})}
+function updateTimelineFills(now){const ses=S.session;if(!ses)return;const kids=el.tl.children;
+  ses.segments.forEach((s,i)=>{const f=kids[i]&&kids[i].firstChild;if(!f)return;
+    const p=Math.min(1,Math.max(0,(now-s.start)/(s.end-s.start||1)));f.style.width=(p*100)+'%'})}
+
+/* ---------- MAIN TICK ---------- */
+function tick(){const now=Date.now();
+  const d=new Date(now);let hh=d.getHours();const ap=hh>=12?'PM':'AM';hh=hh%12||12;
+  el.wall.innerHTML=hh+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())+'<span>'+ap+'</span>';
+  if(panelOpen&&(tickN++%4===0))renderPreview();
+  const ses=S.session;
+  if(!ses){document.body.dataset.state='idle';
+    el.mainname.textContent='T-MINUS';el.timer.textContent='00:00';
+    el.subline.textContent='CONFIGURE YOUR MISSION';el.prev.textContent='';
+    setCtl('idle');document.title='T-MINUS';return}
+  const paused=!!ses.pausedAt,vnow=paused?ses.pausedAt:now,shift=paused?now-ses.pausedAt:0;
+  const segs=ses.segments,last=segs[segs.length-1];
+  let marked=false;
+  for(const sg of segs){if(sg.kind==='task'&&sg.taskId&&sg.end<=vnow&&!ses.doneIds[sg.taskId]){
+    if(!segs.some(s2=>s2!==sg&&s2.kind==='task'&&s2.taskId===sg.taskId&&s2.start>=sg.end)){ses.doneIds[sg.taskId]=1;marked=true}}}
+  if(marked)save();
+  if(vnow>=last.end){document.body.dataset.state='done';
+    el.mainname.textContent='ALL CLEAR';el.timer.textContent=fmt(last.end-ses.startedAt);
+    el.subline.textContent='T-ZERO '+clock(last.end)+' · SESSION COMPLETE';
+    el.next.style.visibility='hidden';renderEnd(ses,last,0);
+    let lt=null;for(let i=segs.length-1;i>=0;i--)if(segs[i].kind==='task'){lt=segs[i];break}
+    el.prev.textContent=lt?lt.name:'';
+    setCtl('done');
+    if(!ses.fired.done){ses.fired.done=1;say('T zero. All tasks complete. Nice work.');save()}
+    updateTimelineFills(vnow);document.title='✔ ALL CLEAR — T-MINUS';return}
+  const seg=currentSeg(vnow);if(!seg)return;
+  const rem=seg.end-vnow,tot=seg.end-seg.start;
+  let st=seg.kind==='wait'?'waiting':seg.kind==='buffer'?'buffer':'running';
+  let wMs=0,cMs=0;
+  if(seg.kind==='task'){wMs=thr(S.settings.warnVal,S.settings.warnUnit,tot);
+    cMs=thr(S.settings.critVal,S.settings.critUnit,tot);
+    if(rem<=cMs)st='critical';else if(rem<=wMs)st='warning'}
+  if(paused)st='paused';
+  document.body.dataset.state=st;
+  el.mainname.textContent=seg.kind==='task'?seg.name:seg.kind==='buffer'?'BUFFER':'T-MINUS';
+  el.timer.textContent=fmt(rem);
+  el.subline.textContent=(paused?'PAUSED · ':'')+(seg.kind==='task'
+    ?('ENDS '+clock(seg.end+shift)+' · '+humShort(tot)+' BLOCK')
+    :((seg.kind==='buffer'?'NEXT: ':'FIRST: ')+(seg.next||'—')+' · AT '+clock(seg.end+shift)));
+  const idx=segs.indexOf(seg);let nxt=null,prv=null;
+  for(let i=idx+1;i<segs.length;i++)if(segs[i].kind==='task'){nxt=segs[i];break}
+  for(let i=idx-1;i>=0;i--)if(segs[i].kind==='task'){prv=segs[i];break}
+  if(nxt){el.next.style.visibility='visible';el.nextlabel.textContent='UP NEXT';
+    el.nextname.textContent=nxt.name;
+    el.nextmeta.textContent=Math.round((nxt.end-nxt.start)/M)+' MIN · '+clock(nxt.start+shift)}
+  else if(seg.kind==='task'){el.next.style.visibility='visible';el.nextlabel.textContent='FINAL TASK';
+    el.nextname.textContent='then you’re free';el.nextmeta.textContent='T-ZERO '+clock(last.end+shift)}
+  else el.next.style.visibility='hidden';
+  el.prev.textContent=prv?prv.name:'';
+  renderEnd(ses,last,shift);setCtl(seg.kind,paused,!!nxt);
+  fire(ses,seg,now,rem,wMs,cMs,paused);
+  updateTimelineFills(vnow);
+  document.title=(paused?'⏸ ':'')+fmt(rem)+' · '+(seg.kind==='task'?seg.name:seg.kind==='buffer'?'buffer':'t-minus')+' — T-MINUS'}
+
+/* ---------- PANEL: TASKS ---------- */
+function renderTasks(){el.tasklist.innerHTML='';
+  S.tasks.forEach(t=>{const r=document.createElement('div');r.className='trow';r.dataset.id=t.id;
+    r.innerHTML='<div class="ord"><button class="up">▲</button><button class="dn">▼</button></div>'+
+      '<input class="tname" placeholder="what needs doing" value="">'+
+      '<input class="tmin" type="number" min="1" placeholder="45">'+
+      '<input class="tbuf" type="number" min="0" placeholder="'+(+S.settings.defBuf||0)+'">'+
+      '<button class="tdel">✕</button>';
+    r.querySelector('.tname').value=t.name||'';
+    r.querySelector('.tmin').value=t.min===''?'':t.min;
+    r.querySelector('.tbuf').value=(t.buf===''||t.buf==null)?'':t.buf;
+    el.tasklist.appendChild(r)})}
+function addTask(focus){S.tasks.push({id:uid(),name:'',min:'',buf:''});save();renderTasks();
+  if(focus){const rows=el.tasklist.querySelectorAll('.tname');rows[rows.length-1].focus()}renderPreview();liveSync()}
+el.tasklist.addEventListener('input',e=>{const r=e.target.closest('.trow');if(!r)return;
+  const t=S.tasks.find(x=>x.id===r.dataset.id);if(!t)return;
+  if(e.target.classList.contains('tname'))t.name=e.target.value;
+  else if(e.target.classList.contains('tmin'))t.min=e.target.value;
+  else if(e.target.classList.contains('tbuf'))t.buf=e.target.value;
+  save();renderPreview();liveSync()});
+el.tasklist.addEventListener('click',e=>{const r=e.target.closest('.trow');if(!r)return;
+  const i=S.tasks.findIndex(x=>x.id===r.dataset.id);if(i<0)return;
+  if(e.target.classList.contains('tdel')){S.tasks.splice(i,1)}
+  else if(e.target.classList.contains('up')&&i>0){[S.tasks[i-1],S.tasks[i]]=[S.tasks[i],S.tasks[i-1]]}
+  else if(e.target.classList.contains('dn')&&i<S.tasks.length-1){[S.tasks[i+1],S.tasks[i]]=[S.tasks[i],S.tasks[i+1]]}
+  else return;
+  save();renderTasks();renderPreview();liveSync()});
+el.tasklist.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.target.classList.contains('tname'))addTask(true)});
+el.addTask.onclick=()=>addTask(true);
+el.clearTasks.onclick=()=>{S.tasks=[];save();renderTasks();renderPreview();liveSync()};
+
+function renderPreview(){const list=buildList(),now=Date.now();
+  if(!list.length){el.preview.innerHTML='<span class="bad">ADD AT LEAST ONE TASK WITH MINUTES</span>';return}
+  const work=list.reduce((a,t)=>a+t.min*M,0);
+  const bufs=list.reduce((a,t,i)=>a+(i<list.length-1?t.bufAfter*M:0),0);
+  const total=work+bufs;let l2;
+  if(S.settings.mode==='deadline'){const dl=parseDeadline(),st=dl-total;
+    l2='LAUNCH BY <b>'+clock(st)+'</b> · DEADLINE <b>'+clock(dl)+'</b>'+
+      (st<now?' · <span class="bad">'+humShort(now-st)+' BEHIND ALREADY</span>'
+             :' · <span class="good">T-MINUS '+humShort(st-now)+'</span>')}
+  else l2='START NOW → T-ZERO ≈ <b>'+clock(now+total)+'</b>';
+  el.preview.innerHTML=list.length+' TASK'+(list.length>1?'S':'')+' · '+humShort(work)+' WORK · '+
+    humShort(bufs)+' BUFFER · <b>'+humShort(total)+' TOTAL</b><br>'+l2}
+
+/* ---------- PANEL: SETTINGS ---------- */
+function syncSettings(){const s=S.settings;
+  el.modeF.classList.toggle('on',s.mode==='forward');
+  el.modeD.classList.toggle('on',s.mode==='deadline');
+  el.dlInput.style.display=s.mode==='deadline'?'':'none';
+  el.dlInput.value=s.deadline;el.defBuf.value=s.defBuf;
+  el.warnVal.value=s.warnVal;el.critVal.value=s.critVal;
+  el.warnPct.classList.toggle('on',s.warnUnit==='pct');el.warnMin.classList.toggle('on',s.warnUnit==='min');
+  el.critPct.classList.toggle('on',s.critUnit==='pct');el.critMin.classList.toggle('on',s.critUnit==='min');
+  el.halfHourChk.checked=!!s.halfHour;el.chimeChk.checked=!!s.chime;
+  el.rateRange.value=s.rate;el.rateVal.textContent=(+s.rate).toFixed(2).replace(/0$/,'')}
+const set=(k,v)=>{S.settings[k]=v;save();syncSettings();renderPreview();
+  if(k==='defBuf')liveSync();
+  else if(k==='deadline'&&S.session&&S.session.deadline){S.session.deadline=parseDeadline();save();liveSync()}};
+el.modeF.onclick=()=>set('mode','forward');
+el.modeD.onclick=()=>set('mode','deadline');
+el.dlInput.oninput=e=>set('deadline',e.target.value||'23:00');
+el.defBuf.oninput=e=>set('defBuf',Math.max(0,+e.target.value||0));
+el.warnVal.oninput=e=>set('warnVal',Math.max(1,+e.target.value||1));
+el.critVal.oninput=e=>set('critVal',Math.max(1,+e.target.value||1));
+el.warnPct.onclick=()=>set('warnUnit','pct');el.warnMin.onclick=()=>set('warnUnit','min');
+el.critPct.onclick=()=>set('critUnit','pct');el.critMin.onclick=()=>set('critUnit','min');
+el.halfHourChk.onchange=e=>set('halfHour',e.target.checked);
+el.chimeChk.onchange=e=>set('chime',e.target.checked);
+el.voiceSel.onchange=e=>{S.settings.voice=e.target.value;save()};
+el.rateRange.oninput=e=>{S.settings.rate=+e.target.value;save();el.rateVal.textContent=(+e.target.value).toFixed(2).replace(/0$/,'')};
+el.testBtn.onclick=()=>say('T minus. Voice check. It is '+clock(Date.now())+'.');
+el.btnStart.onclick=()=>startSession();
+el.btnEnd2.onclick=()=>{endSession()};
+
+function loadVoices(){el.voiceSel.innerHTML='';
+  const sys=document.createElement('option');sys.value='__say__';
+  sys.textContent='MAC SYSTEM VOICE — NATIVE SAY'+(sayBackend?'':' (RUN serve.py)');
+  el.voiceSel.appendChild(sys);
+  let vs=[];try{vs=speechSynthesis.getVoices()}catch(e){}
+  const en=vs.filter(v=>/^en/i.test(v.lang)),rest=vs.filter(v=>!/^en/i.test(v.lang));
+  [...en,...rest].forEach(v=>{const o=document.createElement('option');
+    o.value=v.voiceURI;o.textContent=v.name+' · '+v.lang;el.voiceSel.appendChild(o)});
+  if(S.settings.voice!=='__say__'&&!vs.some(v=>v.voiceURI===S.settings.voice)){
+    S.settings.voice='__say__';save()}
+  el.voiceSel.value=S.settings.voice}
+if('speechSynthesis' in window)speechSynthesis.onvoiceschanged=loadVoices;
+loadVoices();
+
+/* ---------- CONTROLS ---------- */
+el.btnDone.onclick=()=>advance();
+el.btnDefer.onclick=()=>defer();
+el.btnPlus.onclick=()=>extend();
+el.btnPause.onclick=()=>togglePause();
+el.pclose.onclick=()=>closePanel();
+el.panel.addEventListener('click',e=>{if(e.target===el.panel)closePanel()});
+el.btnNew.onclick=()=>{S.session=null;save();buildTimeline();openPanel();tick()};
+el.btnSetup.onclick=()=>togglePanel();
+el.btnEnd.onclick=()=>{const now=Date.now();
+  if(now-endArm<2500){endArm=0;el.btnEnd.classList.remove('arm');el.btnEnd.textContent='✕ END';endSession()}
+  else{endArm=now;el.btnEnd.classList.add('arm');el.btnEnd.textContent='SURE?';
+    setTimeout(()=>{if(Date.now()-endArm>=2400){el.btnEnd.classList.remove('arm');el.btnEnd.textContent='✕ END'}},2600)}};
+addEventListener('keydown',e=>{
+  if(e.key==='Escape'){togglePanel();return}
+  if(e.target.matches('input,select,textarea'))return;
+  const k=e.key.toLowerCase();
+  if(k==='n')advance();
+  else if(k==='d')defer();
+  else if((k==='p'||e.key===' ')&&!panelOpen){e.preventDefault();togglePause()}
+  else if(e.key==='+'||e.key==='=')extend()});
+addEventListener('pointerdown',()=>{el.toast.hidden=dormant?el.toast.hidden:true;takeover();
+  try{if(AC&&AC.state==='suspended')AC.resume()}catch(e){}
+  if(!wl&&S.session)reqWake()},true);
+
+/* ---------- INIT ---------- */
+window.TM={get state(){return S},get dormant(){return dormant},save,tick,buildTimeline,liveSync,togglePause,defer,advance};
+claim();renderTasks();syncSettings();renderPreview();buildTimeline();
+if(S.session){closePanel();el.toast.hidden=false;reqWake()}else openPanel();
+setInterval(tick,250);tick();
+</script>
+</body>
+</html>
