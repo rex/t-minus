@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0] — 2026-09-08
+
+- `serve.py` now owns the `com.pierce.time-announcer` LaunchAgent for its own lifetime: disables it at
+  startup so the two clocks never talk over each other, re-enables it on exit via `atexit` plus
+  SIGTERM/SIGINT/SIGHUP handlers. If the agent was already disabled before launch it is left exactly as
+  found, so the server never enables something the user deliberately silenced
+- `make start` — detached server that survives closing the terminal, logging to `~/Library/Logs/t-minus.log`
+  (`make run` still runs it in the foreground)
+- `make status` — reports whether the server is up and whether the time-announcer is paused
+- `make stop` defensively re-enables the time-announcer, covering the one case serve.py cannot catch
+  (SIGKILL), consistent with the agent's own documented "fail toward speech" philosophy
+
 ## [0.3.0] — 2026-07-10
 
 - Multi-tab singleton: only one tab speaks. Opening the app in a second tab broadcasts a claim (BroadcastChannel); older tabs mute all announcements, stop writing to storage, and show a "MUTED — ACTIVE IN ANOTHER TAB · CLICK TO TAKE OVER" badge. Clicking a muted tab takes the voice back and silences the others. Muted tabs stay live as read-only mirrors, syncing display from storage events. Fixes double/overlapping voices from duplicate tabs
